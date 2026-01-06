@@ -9,13 +9,13 @@
 <body>
 
 <div id="mySidebar" class="sidebar">
-  <a href="javascript:void(0)" onclick="closeNav()" style="font-size: 30px; text-align: right; border: none;">&times; Fechar</a>
-  <a href="#inicio" onclick="closeNav()">🏠 Home</a>
-  <a href="#calculadora" onclick="closeNav()">🧮 Calculadora</a>
-  <a href="#sobre" onclick="closeNav()">✨ Sobre o Projeto</a>
-  <a href="#termos" onclick="closeNav()">⚖️ Termos</a>
-  <a href="#privacidade" onclick="closeNav()">🔒 Privacidade</a>
-  <a href="#contato" onclick="closeNav()">📧 Contato</a>
+  <a href="javascript:void(0)" onclick="closeNav()" class="close-btn" title="Fechar menu">&times; Fechar</a>
+  <a href="index.html" onclick="closeNav()" aria-label="Ir para o início">🏠 Home</a>
+  <a href="sobre.html" onclick="closeNav()" aria-label="Sobre o projeto">✨ Sobre</a>
+  <a href="termos.html" onclick="closeNav()" aria-label="Termos de uso">⚖️ Termos</a>
+  <a href="privacidade.html" onclick="closeNav()" aria-label="Política de privacidade">🔒 Privacidade</a>
+  <a href="contato.html" onclick="closeNav()" aria-label="Entre em contato">📧 Contato</a>
+  <a href="#calculadora" onclick="closeNav()" aria-label="Ir para a calculadora">🧮 Calculadora</a>
 </div>
 
 <button class="open-btn" onclick="openNav()">☰ MENU</button>
