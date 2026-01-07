@@ -610,62 +610,80 @@
 
 <!-- JAVASCRIPT DA VOTAÇÃO -->
 <script>
-// ========== SISTEMA DE VOTAÇÃO ==========
+/<!-- SISTEMA DE VOTAÇÃO (VISUAL APENAS) -->
+<script>
+// Sistema de votação será implementado em breve
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuração
-    const config = {
-        musicas: [
-            { id: 'year', nome: 'A Year Without Rain' },
-            { id: 'guess', nome: 'Guess You Could Say I\'m in Love' },
-            { id: 'mind', nome: 'My Mind & Me' },
-            { id: 'anxiety', nome: 'Anxiety (feat. Julia Michaels)' }
-        ],
-        duracaoDias: 2
-    };
-
-    // Estado da votação
-    let estadoVotacao = {
-        encerraEm: new Date(Date.now() + config.duracaoDias * 24 * 60 * 60 * 1000),
-        votos: {},
-        totalVotos: 0,
-        usuarioJaVotou: localStorage.getItem('votacao_selena_ja_votou') === 'true'
-    };
-
-    // Inicializar votos
-    config.musicas.forEach(musica => {
-        estadoVotacao.votos[musica.id] = {
-            nome: musica.nome,
-            votos: 0,
-            percent: 0
-        };
-    });
-
-    // Valores iniciais (mock)
-    estadoVotacao.votos.year.votos = 325;
-    estadoVotacao.votos.guess.votos = 210;
-    estadoVotacao.votos.mind.votos = 160;
-    estadoVotacao.votos.anxiety.votos = 125;
-
-    // Calcular total e percentuais
-    function calcularTotais() {
-        estadoVotacao.totalVotos = 0;
-        config.musicas.forEach(musica => {
-            estadoVotacao.totalVotos += estadoVotacao.votos[musica.id].votos;
-        });
-        
-        config.musicas.forEach(musica => {
-            const votos = estadoVotacao.votos[musica.id].votos;
-            estadoVotacao.votos[musica.id].percent = estadoVotacao.totalVotos > 0 ? 
-                Math.round((votos / estadoVotacao.totalVotos) * 100) : 0;
-        });
+    const container = document.getElementById('sistema-votacao-2026');
+    if (container) {
+        container.innerHTML = `
+            <div class="proximo-foco-card">
+                <div class="pf-header">
+                    <span class="pf-icon">🗳️</span>
+                    <span class="pf-title">Próximo Foco</span>
+                    <span class="pf-status">EM BREVE</span>
+                </div>
+                
+                <div class="pf-timer">
+                    <span class="timer-icon">⏰</span>
+                    <span class="timer-text">Sistema em desenvolvimento</span>
+                </div>
+                
+                <div class="pf-options">
+                    <div class="pf-option">
+                        <div class="option-name">
+                            <span>A Year Without Rain</span>
+                            <span>65%</span>
+                        </div>
+                        <div class="option-bar">
+                            <div class="bar-fill" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="pf-option">
+                        <div class="option-name">
+                            <span>Guess You Could Say I'm in Love</span>
+                            <span>42%</span>
+                        </div>
+                        <div class="option-bar">
+                            <div class="bar-fill" style="width: 42%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="pf-option">
+                        <div class="option-name">
+                            <span>My Mind & Me</span>
+                            <span>32%</span>
+                        </div>
+                        <div class="option-bar">
+                            <div class="bar-fill" style="width: 32%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="pf-option">
+                        <div class="option-name">
+                            <span>Anxiety (feat. Julia Michaels)</span>
+                            <span>25%</span>
+                        </div>
+                        <div class="option-bar">
+                            <div class="bar-fill" style="width: 25%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="pf-vote-btn" onclick="alert('🎵 Sistema de votação será ativado em breve!\\n\\nVocê poderá votar na próxima música foco a cada 2 dias.')">
+                    🗳️ EM BREVE
+                </button>
+                
+                <div class="pf-footer">
+                    <small>Total de votos: 820</small>
+                    <small>1 voto por dia • 2 dias de duração</small>
+                </div>
+            </div>
+        `;
     }
-
-    calcularTotais();
-
-    // Criar HTML da votação
-    function criarVotacaoHTML() {
-        const container = document.getElementById('sistema-votacao-2026');
-        if (!container) return;
+});
+</script>
 
         container.innerHTML = `
             <div class="proximo-foco-card">
