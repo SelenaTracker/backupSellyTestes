@@ -353,3 +353,317 @@ function updateUI() {
 
     if(document.getElementById("totalDailyStats")) document.getElementById("totalDailyStats").innerText = dailyTotal.toLocaleString();
 }
+
+// ============================================
+// SISTEMA DE VOTAÇÃO DINÂMICO
+// ============================================
+
+// Dados das músicas em votação
+let votacaoMusicas = [
+    { 
+        id: 1, 
+        nome: "A Year Without Rain", 
+        votos: 533,  // 533 votos de 820 = 65%
+        porcentagem: 65 
+    },
+    { 
+        id: 2, 
+        nome: "Guess You Could Say I'm in Love", 
+        votos: 344,  // 344 votos de 820 = 42%
+        porcentagem: 42 
+    },
+    { 
+        id: 3, 
+        nome: "My Mind & Me", 
+        votos: 262,  // 262 votos de 820 = 32%
+        porcentagem: 32 
+    },
+    { 
+        id: 4, 
+        nome: "Anxiety (feat. Julia Michaels)", 
+        votos: 205,  // 205 votos de 820 = 25%
+        porcentagem: 25 
+    }
+];
+
+// Total de votos (soma de todos os votos)
+let totalVotos = 820;
+
+// Música que o usuário já votou hoje (armazenada no navegador)
+let musicaVotadaHoje = null;
+
+// Chave para armazenar no localStorage
+const VOTACAO_KEY = 'selena_votacao_data';
+const VOTO_HOJE_KEY = 'selena_voto_hoje';
+
+function atualizarDisplayVotacao() {
+    // 1. Calcular porcentagens atualizadas
+    votacaoMusicas.forEach(musica => {
+        musica.porcentagem = totalVotos > 0 ? 
+            Math.round((musica.votos / totalVotos) * 100) : 0;
+    });
+    
+    // 2. Atualizar a tabela HTML
+    const musicasContainer = document.querySelector('.votacao-musicas');
+    if (!musicasContainer) return;
+    
+    // Limpar e reconstruir
+    musicasContainer.innerHTML = '';
+    
+    votacaoMusicas.forEach(musica => {
+        const musicaHTML = `
+            <div class="musica-item" data-id="${musica.id}">
+                <div class="musica-nome">
+                    <span>${musica.nome}</span>
+                    <span>${musica.porcentagem}%</span>
+                </div>
+                <div class="musica-bar">
+                    <div class="musica-fill" style="width: ${musica.porcentagem}%"></div>
+                </div>
+            </div>
+        `;
+        musicasContainer.innerHTML += musicaHTML;
+    });
+    
+    // 3. Atualizar total de votos
+    const totalElement = document.querySelector('.votacao-footer span:first-child');
+    if (totalElement) {
+        totalElement.textContent = `Total de votos: ${totalVotos}`;
+    }
+    
+    // 4. Atualizar botão de votar
+    const botaoVotar = document.querySelector('.votar-btn');
+    if (botaoVotar) {
+        if (musicaVotadaHoje) {
+            botaoVotar.textContent = `✅ JÁ VOTOU HOJE (${musicaVotadaHoje.nome})`;
+            botaoVotar.style.backgroundColor = '#27ae60';
+            botaoVotar.disabled = true;
+        } else {
+            botaoVotar.textContent = '🗳️ VOTAR AGORA';
+            botaoVotar.style.backgroundColor = '';
+            botaoVotar.disabled = false;
+        }
+    }
+    
+    // 5. Salvar dados atualizados
+    salvarDadosVotacao();
+}
+
+function processarVoto(musicaId) {
+    // Verificar se já votou hoje
+    if (musicaVotadaHoje) {
+        alert('❌ Você já votou hoje! Volte amanhã para votar novamente.');
+        return;
+    }
+    
+    // Encontrar a música selecionada
+    const musica = votacaoMusicas.find(m => m.id === musicaId);
+    if (!musica) return;
+    
+    // Atualizar votos
+    musica.votos += 1;
+    totalVotos += 1;
+    
+    // Marcar como votada hoje
+    musicaVotadaHoje = musica;
+    
+    // Salvar no localStorage
+    const hoje = new Date().toDateString();
+    localStorage.setItem(VOTO_HOJE_KEY, JSON.stringify({
+        data: hoje,
+        musicaId: musicaId
+    }));
+    
+    // Atualizar display
+    atualizarDisplayVotacao();
+    
+    // Feedback visual
+    alert(`🎉 Seu voto em "${musica.nome}" foi registrado!`);
+    
+    // Atualizar timer (reinicia contagem de 24h)
+    verificarVotoDiario();
+}
+
+function salvarDadosVotacao() {
+    const dados = {
+        musicas: votacaoMusicas,
+        totalVotos: totalVotos,
+        ultimaAtualizacao: new Date().toISOString()
+    };
+    localStorage.setItem(VOTACAO_KEY, JSON.stringify(dados));
+}
+
+function carregarDadosVotacao() {
+    const dadosSalvos = localStorage.getItem(VOTACAO_KEY);
+    if (dadosSalvos) {
+        const dados = JSON.parse(dadosSalvos);
+        votacaoMusicas = dados.musicas || votacaoMusicas;
+        totalVotos = dados.totalVotos || totalVotos;
+    }
+    
+    // Verificar voto de hoje
+    const votoHojeSalvo = localStorage.getItem(VOTO_HOJE_KEY);
+    if (votoHojeSalvo) {
+        const votoHoje = JSON.parse(votoHojeSalvo);
+        const hoje = new Date().toDateString();
+        
+        if (votoHoje.data === hoje) {
+            // Usuário já votou hoje
+            const musica = votacaoMusicas.find(m => m.id === votoHoje.musicaId);
+            if (musica) {
+                musicaVotadaHoje = musica;
+            }
+        }
+    }
+}
+
+function verificarVotoDiario() {
+    const votoHojeSalvo = localStorage.getItem(VOTO_HOJE_KEY);
+    if (votoHojeSalvo) {
+        const votoHoje = JSON.parse(votoHojeSalvo);
+        const hoje = new Date().toDateString();
+        
+        if (votoHoje.data !== hoje) {
+            // É um novo dia, libera o voto
+            musicaVotadaHoje = null;
+            localStorage.removeItem(VOTO_HOJE_KEY);
+            atualizarDisplayVotacao();
+        }
+    }
+}
+
+function mostrarModalVotacao() {
+    if (musicaVotadaHoje) {
+        alert('✅ Você já votou hoje! Volte amanhã para votar novamente.');
+        return;
+    }
+    
+    // Criar modal
+    const modalHTML = `
+        <div class="modal-votacao-overlay" id="modalVotacao">
+            <div class="modal-votacao-content">
+                <div class="modal-header">
+                    <h3>🗳️ Votar na Próxima Música</h3>
+                    <button class="modal-close" onclick="fecharModalVotacao()">×</button>
+                </div>
+                <div class="modal-body">
+                    <p>Escolha qual música quer focar amanhã:</p>
+                    <div class="opcoes-voto">
+                        ${votacaoMusicas.map(musica => `
+                            <div class="opcao-voto" onclick="processarVoto(${musica.id}); fecharModalVotacao()">
+                                <span class="opcao-nome">${musica.nome}</span>
+                                <span class="opcao-porcentagem">${musica.porcentagem}%</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <p>1 voto por dia • 2 dias de duração</p>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Adicionar ao corpo da página
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function fecharModalVotacao() {
+    const modal = document.getElementById('modalVotacao');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Função para inicializar tudo
+function inicializarSistemaVotacao() {
+    carregarDadosVotacao();
+    atualizarDisplayVotacao();
+    
+    // Atualizar a cada minuto (para verificar se é novo dia)
+    setInterval(verificarVotoDiario, 60000);
+    
+    // Verificar voto diário a cada 5 minutos
+    setInterval(verificarVotoDiario, 300000);
+}
+
+// Substituir o alert no botão de votar
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar sistemas
+    iniciarTimerVotacao();
+    inicializarSistemaVotacao();
+    
+    // Substituir o evento do botão
+    const botaoVotar = document.querySelector('.votar-btn');
+    if (botaoVotar) {
+        botaoVotar.setAttribute('onclick', 'mostrarModalVotacao()');
+    }
+    
+    // Fechar modal ao clicar fora
+    document.addEventListener('click', function(event) {
+        if (event.target.classList.contains('modal-votacao-overlay')) {
+            fecharModalVotacao();
+        }
+    });
+});
+
+// ============================================
+// TIMER DINÂMICO PARA VOTAÇÃO
+// ============================================
+
+function iniciarTimerVotacao() {
+    // 1. DEFINA AQUI A DATA/HORA DE TÉRMINO DA VOTAÇÃO
+    // Formato: Ano-Mês-DiaTHora:Minuto:Segundo
+    // Exemplo: "2026-01-10T23:59:59" (10 de Janeiro de 2026, 23:59:59)
+    const dataTerminoVotacao = new Date("2026-01-10T23:59:59");
+    
+    // 2. Elemento onde o timer será exibido
+    const elementoDisplayTimer = document.getElementById('timer-proximo-foco');
+    
+    if (!elementoDisplayTimer) {
+        console.log("Timer da votação não encontrado. Verifique o ID no HTML.");
+        return;
+    }
+    
+    // 3. Função que atualiza o timer a cada segundo
+    function atualizarContagemRegressiva() {
+        const agora = new Date();
+        const diferenca = dataTerminoVotacao - agora;
+        
+        // Tempo esgotado
+        if (diferenca <= 0) {
+            elementoDisplayTimer.textContent = "🎉 Votação encerrada!";
+            clearInterval(intervaloId);
+            return;
+        }
+        
+        // Cálculo do tempo restante
+        const dias = Math.floor(diferenca / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diferenca % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutos = Math.floor((diferenca % (1000 * 60 * 60)) / (1000 * 60));
+        const segundos = Math.floor((diferenca % (1000 * 60)) / 1000);
+        
+        // Formatar com 2 dígitos
+        const horasFormatadas = String(horas).padStart(2, '0');
+        const minutosFormatados = String(minutos).padStart(2, '0');
+        const segundosFormatados = String(segundos).padStart(2, '0');
+        
+        // Montar texto
+        let textoFinal;
+        if (dias > 0) {
+            textoFinal = `${dias}d ${horasFormatadas}h ${minutosFormatados}m ${segundosFormatados}s`;
+        } else {
+            textoFinal = `${horasFormatadas}h ${minutosFormatados}m ${segundosFormatados}s`;
+        }
+        
+        // Atualizar na tela
+        elementoDisplayTimer.textContent = textoFinal;
+    }
+    
+    // 4. Iniciar e atualizar a cada segundo
+    atualizarContagemRegressiva();
+    const intervaloId = setInterval(atualizarContagemRegressiva, 1000);
+}
+
+// Iniciar quando a página carregar
+document.addEventListener('DOMContentLoaded', iniciarTimerVotacao);
